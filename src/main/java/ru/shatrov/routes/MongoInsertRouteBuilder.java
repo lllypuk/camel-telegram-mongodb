@@ -1,6 +1,8 @@
 package ru.shatrov.routes;
 
+import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.telegram.model.IncomingMessage;
 import ru.shatrov.App;
 
 /**
@@ -10,13 +12,22 @@ import ru.shatrov.App;
  */
 public class MongoInsertRouteBuilder extends RouteBuilder {
 
+    private static final Processor telegramProcessor = exchange -> {
+        IncomingMessage incomingMessage = (IncomingMessage) exchange.getIn().getBody();
+
+        incomingMessage.setText("Сообщение пользователя:\n\n" + incomingMessage.getText());
+
+        exchange.getIn().setBody(incomingMessage);
+    };
+
     @Override
     public void configure() {
-        fromF("telegram:bots/?authorizationToken=%s", App.AUTHORIZATION_TOKEN)
+        from("telegram:bots/?authorizationToken=" + App.AUTHORIZATION_TOKEN)
+                .process(telegramProcessor)
                 .to("mongodb:telegram?database=telegram&collection=chat_message&operation=insert")
                 .setBody(simple("${body}"))
                 .to("log:INFO")
                 .setBody(simple("Ваше сообщение сохранено"))
-                .toF("telegram:bots/?authorizationToken=%s", App.AUTHORIZATION_TOKEN);
+                .to("telegram:bots/?authorizationToken=" + App.AUTHORIZATION_TOKEN);
     }
 }

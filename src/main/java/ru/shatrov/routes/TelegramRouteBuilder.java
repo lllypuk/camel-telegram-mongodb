@@ -14,7 +14,7 @@ public class TelegramRouteBuilder extends RouteBuilder {
 
     @Override
     public void configure() {
-        fromF("telegram:bots/?authorizationToken=%s", App.AUTHORIZATION_TOKEN)
+        from("telegram:bots/?authorizationToken=" + App.AUTHORIZATION_TOKEN)
                 .to("log:INFO")
                 .process(exchange -> {
                     IncomingMessage incomingMessage = (IncomingMessage) exchange.getIn().getBody();
@@ -24,6 +24,6 @@ public class TelegramRouteBuilder extends RouteBuilder {
 
                     exchange.getIn().setBody(outgoingTextMessage);
                 })
-                .toF("telegram:bots/?authorizationToken=%s", App.AUTHORIZATION_TOKEN);
+                .to("telegram:bots/?authorizationToken=" + App.AUTHORIZATION_TOKEN);
     }
 }
